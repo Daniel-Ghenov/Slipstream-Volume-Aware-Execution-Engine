@@ -1,6 +1,10 @@
-add_library(networking_lib INTERFACE)
+add_library(networking_lib STATIC
+    ClientConnection.cpp
+)
 
 target_include_directories(networking_lib
-    INTERFACE
+    PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}
 )
+
+add_subdirectory(serialisation)

@@ -16,7 +16,7 @@ enum class MessageType {
 struct FrameHeader {
     uint16_t bodyLen;
     uint8_t msgType;
-    uint8_t version = 1;
+    uint8_t version;
 };
 
 struct QuoteBody {

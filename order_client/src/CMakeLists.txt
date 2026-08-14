@@ -1,8 +1,8 @@
-add_executable(market_client
+add_executable(order_client
     main.cpp
 )
 
-target_link_libraries(market_client PRIVATE
+target_link_libraries(order_client PRIVATE
     csvparser_lib
     networking_lib
     serialisation_lib
