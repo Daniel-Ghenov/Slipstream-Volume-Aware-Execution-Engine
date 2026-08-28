@@ -1,0 +1,3 @@
+add_subdirectory(types)
+add_subdirectory(serialisation)
+add_subdirectory(deserialisation)

@@ -8,21 +8,31 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 set(CMAKE_C_FLAGS_RELEASE "-O3")
 
-option(SLIPSTREAM_BUILD_TESTS "Build the test suite" ON)
+option(SLIPSTREAM_BUILD_TESTS "Build the test suite" OFF)
+
+include(FetchContent)
+FetchContent_Declare(
+    cli11
+    GIT_REPOSITORY https://github.com/CLIUtils/CLI11.git
+    GIT_TAG v2.4.2
+)
+FetchContent_MakeAvailable(cli11)
 
 if(SLIPSTREAM_BUILD_TESTS)
     enable_testing()
 
-    include(FetchContent)
     FetchContent_Declare(
         googletest
         GIT_REPOSITORY https://github.com/google/googletest.git
-        GIT_TAG        v1.15.2          # pinned: reproducible builds
+        GIT_TAG        v1.15.2
     )
     FetchContent_MakeAvailable(googletest)
     include(GoogleTest)
 endif()
 
-add_subdirectory(libs)
-add_subdirectory(market_client)
-add_subdirectory(order_client)
+
+add_subdirectory(src)
+
+if(SLIPSTREAM_BUILD_TESTS)
+    add_subdirectory(test)
+endif()
