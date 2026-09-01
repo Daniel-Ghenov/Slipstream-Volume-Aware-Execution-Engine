@@ -6,6 +6,8 @@
 
 static const size_t SYMBOL_MAX_LEN = 12;
 
+namespace csv {
+
 struct Quote {
     size_t timestamp;
     char symbol [SYMBOL_MAX_LEN];
@@ -21,5 +23,7 @@ struct Trade {
     size_t price;
     size_t quantity;
 };
+
+}
 
 #endif //QUOTE_H

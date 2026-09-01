@@ -2,6 +2,7 @@
 #define SERVER_CONNECTION_H
 
 #include <string>
+#include "ClientConnection.h"
 
 class ServerConnection {
 private:
@@ -11,8 +12,7 @@ public:
     ServerConnection(const std::string& ip, int port);
     ~ServerConnection();
 
-    size_t receiveBuffer(void* buffer, size_t bufferSize);
-    size_t sendBuffer(void* buffer, size_t bufferSize);
+    ClientConnection accept();
 
     ServerConnection(const ServerConnection&) = delete;
     ServerConnection& operator=(const ServerConnection&) = delete;

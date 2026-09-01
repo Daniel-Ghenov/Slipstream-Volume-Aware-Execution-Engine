@@ -18,12 +18,13 @@ public:
     void run();
 
 private:
-    void sendQuote(const Quote& quote);
+    void sendQuote(const csv::Quote& quote);
     void sendHeartBeat();
     static size_t getNow();
+    static size_t getWallClockNow();
 
-    static QuoteBody bodyFromQuote(const Quote& quote);
-    static const size_t HEARTBEAT_PER_MS = 50;
+    static Quote bodyFromQuote(const csv::Quote& quote);
+    static constexpr size_t HEARTBEAT_PER_MS = 50;
 };
 
 

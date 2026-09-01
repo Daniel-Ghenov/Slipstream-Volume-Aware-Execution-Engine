@@ -1,7 +1,11 @@
 #include "MessageHandler.h"
+#include <algorithm>
 #include <cstring>
 #include <new>
 #include <utility>
+#include "FrameHeader.h"
+
+using network::FrameHeader;
 
 MessageHandler::MessageHandler()
     : buffer(::operator new(BUFFER_SIZE)), size(0) { }
@@ -34,14 +38,20 @@ void MessageHandler::free() {
 }
 
 MessagesRecieved MessageHandler::recieve(void* mem, size_t size) {
-    size_t currSize = this->size;
-    if (currSize + size > BUFFER_SIZE)
+
+    if (this->size + size > BUFFER_SIZE)
         throw std::bad_alloc();
 
-    memcpy(static_cast<std::byte*>(buffer) + currSize, mem, size);
+    if (dirtyStart != nullptr) {
+        memcpy(buffer, dirtyStart, this->size);
+
+
+    }
+
+    memcpy(static_cast<std::byte*>(buffer) + this->size, mem, size);
     this->size += size;
 
-    return getMessages(buffer, size);
+    return getMessages(buffer, this->size);
 }
 
 MessagesRecieved MessageHandler::getMessages(void* buffer, size_t size) {
@@ -51,10 +61,11 @@ MessagesRecieved MessageHandler::getMessages(void* buffer, size_t size) {
 
     FrameHeader header = *(static_cast<FrameHeader*>(buffer));
 
-    if(header.bodyLen > size)
+    if(header.bodyLen + sizeof(FrameHeader) > size)
         return {nullptr, 0};
     size_t messageSize = sizeof(FrameHeader) + header.bodyLen;
     auto [_ns, others] = getMessages(static_cast<std::byte*>(buffer) + messageSize, size - messageSize);
+    dirtyStart = std::max(dirtyStart, static_cast<void*>(static_cast<std::byte*>(buffer) + messageSize));
     this->size -= messageSize;
     return {static_cast<FrameHeader*>(buffer), others + 1};
 

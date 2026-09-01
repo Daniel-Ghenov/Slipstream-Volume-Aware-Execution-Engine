@@ -3,8 +3,9 @@
 
 #include <cstdint>
 
-// Shared by every wire protocol on top of this transport (GCMD, OE, ...).
-// Each protocol defines its own message-type numbering for msgType.
+namespace network {
+
+
 #pragma pack(push, 1)
 struct FrameHeader {
     uint16_t bodyLen;
@@ -12,5 +13,7 @@ struct FrameHeader {
     uint8_t version;
 };
 #pragma pack(pop)
+
+} // namespace network
 
 #endif //FRAME_HEADER_H

@@ -1,5 +1,6 @@
 add_library(networking_lib STATIC
     ClientConnection.cpp
+    ServerConnection.cpp
 )
 
 target_include_directories(networking_lib
@@ -8,7 +9,6 @@ target_include_directories(networking_lib
 )
 
 add_subdirectory(framing)
-add_subdirectory(types)
-add_subdirectory(serialisation)
 add_subdirectory(libslipstream_codec)
+add_subdirectory(gcmd)
 add_subdirectory(oe)

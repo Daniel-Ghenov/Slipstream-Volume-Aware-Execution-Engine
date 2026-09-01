@@ -1,16 +1,10 @@
 
+#include "NetworkMessageReceiver.h"
+#include "OrderBookService.h"
+#include "QuoteMessageHandler.h"
+#include "ServerConnection.h"
 #include <CLI/CLI.hpp>
 #include <string>
-// slipstream \
-//   --symbol    SYNTH1 \
-//   --max-quantity  500 \
-//   --participation-cap 0.15 \
-//   --vwap-window-ms 30000 \
-//   --band-bps       25.5 \
-//   --md-host 127.0.0.1 --md-port 14200 \
-//   --oe-host 127.0.0.1 --oe-port 14300 \
-//   --transport      tcp
-
 
 int main(int argc, char** argv) {
     CLI::App app{};
@@ -57,6 +51,21 @@ int main(int argc, char** argv) {
         ->required();
 
     CLI11_PARSE(app, argc, argv);
+
+    ServerConnection mdListener(mdHost, mdPort);
+    ServerConnection oeListener(oeHost, oePort);
+
+    ClientConnection mdClient = mdListener.accept();
+    ClientConnection oeClient = oeListener.accept();
+
+    OrderBookService obService = {symbol};
+    QuoteMessageHandler mdHandler = {&obService};
+    MessageHandler messageHandler;
+    NetworkMessageReceiver mdReceiver = {&mdClient, &messageHandler, &mdHandler};
+    mdReceiver.start();
+
+    
+
 
 
     return 0;

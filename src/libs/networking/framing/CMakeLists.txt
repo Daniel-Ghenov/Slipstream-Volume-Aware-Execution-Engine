@@ -1,8 +1,6 @@
-add_library(framing_lib STATIC
-    MessageHandler.cpp
-)
+add_library(framing_lib INTERFACE)
 
 target_include_directories(framing_lib
-    PUBLIC
+    INTERFACE
         ${CMAKE_CURRENT_SOURCE_DIR}
 )

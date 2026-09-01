@@ -3,7 +3,9 @@
 
 
 #include <cstdint>
-#include "FrameHeader.h"
+#include <variant>
+
+namespace network {
 
 #pragma pack(push, 1)
 
@@ -23,12 +25,6 @@ struct QuoteBody {
     int64_t askPrice;
 };
 
-enum class TradeAggressor {
-    BUY,
-    SELL,
-    UNKNOWN
-};
-
 struct TradeBody {
     char symbol[12];
     uint64_t timestampNs;
@@ -42,12 +38,6 @@ struct HeartbeatBody {
     uint64_t timestamp;
 };
 
-enum class SessionControlState {
-    OPEN = 0,
-    HALT = 1,
-    CLOSE = 2
-};
-
 struct SessionControlBody {
     uint64_t timestamp;
     uint8_t state;
@@ -55,9 +45,24 @@ struct SessionControlBody {
 
 #pragma pack(pop)
 
+} // namespace network
 
-MessageType messageTypeFromNum(uint8_t type);
-uint8_t messageTypeToNum(MessageType type);
+
+enum class TradeAggressor {
+    BUY,
+    SELL,
+    UNKNOWN
+};
+
+enum class SessionControlState {
+    OPEN = 0,
+    HALT = 1,
+    CLOSE = 2
+};
+
+
+network::MessageType messageTypeFromNum(uint8_t type);
+uint8_t messageTypeToNum(network::MessageType type);
 
 TradeAggressor aggressorFromChar(char aggressor);
 char aggressorToChar(TradeAggressor aggressor);
@@ -65,12 +70,6 @@ char aggressorToChar(TradeAggressor aggressor);
 SessionControlState sessionControlStateFromNum(uint8_t state);
 uint8_t sessionControlStateToNum(SessionControlState aggressor);
 
-
-// ---- Non-packed domain objects for business logic. Translate a wire body
-// into one of these immediately after receiving it, and use these (never
-// the packed *Body structs above) past that point: naturally aligned, and
-// with wire codes already decoded into their enums.
-namespace network {
 
 struct Quote {
     char symbol[12];
@@ -99,11 +98,12 @@ struct SessionControl {
     SessionControlState state;
 };
 
-} // namespace network
 
-network::Quote toQuote(const QuoteBody& body);
-network::Trade toTrade(const TradeBody& body);
-network::Heartbeat toHeartbeat(const HeartbeatBody& body);
-network::SessionControl toSessionControl(const SessionControlBody& body);
+using MDMessage = std::variant<Quote, Trade, Heartbeat, SessionControl>;
+
+Quote toQuote(const network::QuoteBody& body);
+Trade toTrade(const network::TradeBody& body);
+Heartbeat toHeartbeat(const network::HeartbeatBody& body);
+SessionControl toSessionControl(const network::SessionControlBody& body);
 
 #endif

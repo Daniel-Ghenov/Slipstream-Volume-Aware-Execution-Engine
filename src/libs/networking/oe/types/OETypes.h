@@ -5,6 +5,10 @@
 #include <cstdint>
 #include "FrameHeader.h"
 
+// Wire-format types: these are the packed structs actually written to and
+// read from the socket.
+namespace network {
+
 #pragma pack(push, 1)
 
 enum class OEMessageType {
@@ -36,6 +40,8 @@ struct ExecReportBody {
 
 #pragma pack(pop)
 
+} // namespace network
+
 
 enum class OrderStatus {
     ACCEPTED,
@@ -62,8 +68,8 @@ enum class RejectReason {
     THROTTLE
 };
 
-OEMessageType oeMessageTypeFromNum(uint8_t type);
-uint8_t oeMessageTypeToNum(OEMessageType type);
+network::OEMessageType oeMessageTypeFromNum(uint8_t type);
+uint8_t oeMessageTypeToNum(network::OEMessageType type);
 
 OrderStatus orderStatusFromChar(char status);
 char orderStatusToChar(OrderStatus status);
@@ -79,10 +85,9 @@ uint8_t rejectReasonToNum(RejectReason code);
 
 
 // ---- Non-packed domain objects for business logic. Translate a wire body
-// into one of these immediately after receiving it, and use these (never
-// the packed *Body structs above) past that point: naturally aligned, and
-// with wire codes already decoded into their enums.
-namespace network {
+// (network::NewOrderBody etc.) into one of these immediately after
+// receiving it, and use these (never the network:: structs) past that
+// point: naturally aligned, and with wire codes already decoded.
 
 struct NewOrder {
     uint64_t clientOrderId;
@@ -104,9 +109,7 @@ struct ExecReport {
     RejectReason reasonCode;
 };
 
-} // namespace network
-
-network::NewOrder toNewOrder(const NewOrderBody& body);
-network::ExecReport toExecReport(const ExecReportBody& body);
+NewOrder toNewOrder(const network::NewOrderBody& body);
+ExecReport toExecReport(const network::ExecReportBody& body);
 
 #endif //OE_TYPES_H

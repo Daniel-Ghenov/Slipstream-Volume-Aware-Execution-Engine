@@ -1,5 +1,5 @@
 add_library(libslipstream_codec STATIC
-    GCMDDeserialiser.cpp
+    MessageHandler.cpp
 )
 
 target_include_directories(libslipstream_codec
@@ -8,5 +8,5 @@ target_include_directories(libslipstream_codec
 )
 
 target_link_libraries(libslipstream_codec PUBLIC
-    network_types
+    framing_lib
 )

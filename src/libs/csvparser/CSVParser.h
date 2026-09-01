@@ -21,9 +21,9 @@ public:
     CSVParser(const std::string& filename);
     CSVParser(const char* filename);
 
-    Quote readQuote();
+    csv::Quote readQuote();
 
-    Trade readTrade();
+    csv::Trade readTrade();
     bool reachedEnd();
 
 private:

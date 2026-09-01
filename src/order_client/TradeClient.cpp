@@ -7,7 +7,7 @@
 
 void TradeClient::run() {
 
-    Trade firstTrade = parser->readTrade();
+    csv::Trade firstTrade = parser->readTrade();
     size_t firstTimestamp = firstTrade.timestamp;
     size_t startTimeMillis = getNow();
     size_t startTimestamp = startTimeMillis - firstTimestamp;
@@ -15,7 +15,7 @@ void TradeClient::run() {
     sendTrade(firstTrade);
     while(!parser->reachedEnd()) {
         try {
-            Trade trade = parser->readTrade();
+            csv::Trade trade = parser->readTrade();
             size_t timeToSend = startTimestamp + trade.timestamp;
             for(size_t now{getNow()}; now < timeToSend; now = getNow()) {
                 if (now - lastSentHeartbeatMS > HEARTBEAT_PER_MS)
@@ -31,29 +31,37 @@ void TradeClient::run() {
     }
 }
 
-void TradeClient::sendTrade(const Trade& trade) {
-    TradeBody body = bodyFromTrade(trade);
+void TradeClient::sendTrade(const csv::Trade& trade) {
+    Trade body = bodyFromTrade(trade);
     size_t messageSize = GCMDSerialiser::serialiseTradeMessage(buffer, body);
     connection->sendBuffer(buffer, messageSize);
 }
 
 void TradeClient::sendHeartBeat() {
-    HeartbeatBody body{getNow()};
+    Heartbeat body{getWallClockNow()};
     size_t messageSize = GCMDSerialiser::serialiseHeartBeatMessage(buffer, body);
     connection->sendBuffer(buffer, messageSize);
 }
 
 size_t TradeClient::getNow() {
     return std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()
+    ).count();
+}
+
+size_t TradeClient::getWallClockNow() {
+    return std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::system_clock::now().time_since_epoch()
     ).count();
 }
 
-TradeBody TradeClient::bodyFromTrade(const Trade& trade){
-    TradeBody body;
+Trade TradeClient::bodyFromTrade(const csv::Trade& trade){
+    Trade body;
     memcpy(body.symbol, trade.symbol, SYMBOL_MAX_LEN);
-    body.timestampNs = getNow();
+    body.timestampNs = getWallClockNow();
     body.price = trade.price;
     body.quantity = trade.quantity;
+    body.aggressor = TradeAggressor::UNKNOWN;
+    body.id = 0;
     return body;
 }

@@ -1,5 +1,7 @@
 #include "CSVParser.h"
 
+using namespace csv;
+
 CSVParser::CSVParser(const std::string& filename): file(filename) {
     if (!file.is_open())
         throw std::runtime_error("Failed to open CSV file: " + filename);

@@ -2,6 +2,8 @@
 #include <cstring>
 #include <stdexcept>
 
+using namespace network;
+
 OEMessageType oeMessageTypeFromNum(uint8_t type) {
     switch(type) {
         case 10: return OEMessageType::NEW_ORDER;
@@ -92,8 +94,8 @@ uint8_t rejectReasonToNum(RejectReason code) {
     }
 }
 
-network::NewOrder toNewOrder(const NewOrderBody& body) {
-    network::NewOrder order{};
+NewOrder toNewOrder(const NewOrderBody& body) {
+    NewOrder order{};
     order.clientOrderId = body.clientOrderId;
     std::memcpy(order.symbol, body.symbol, sizeof(order.symbol));
     order.status = orderStatusFromChar(body.status);
@@ -105,8 +107,8 @@ network::NewOrder toNewOrder(const NewOrderBody& body) {
     return order;
 }
 
-network::ExecReport toExecReport(const ExecReportBody& body) {
-    network::ExecReport report{};
+ExecReport toExecReport(const ExecReportBody& body) {
+    ExecReport report{};
     report.clientOrderId = body.clientOrderId;
     report.tsNs = body.tsNs;
     report.status = execStatusFromNum(body.status);

@@ -3,18 +3,19 @@
 
 #include <algorithm>
 #include <cstdint>
+#include "FrameHeader.h"
 #include "OETypes.h"
 
 class OEDeserialiser {
 private:
-    static constexpr size_t NEW_ORDER_MESSAGE_SIZE = sizeof(FrameHeader) + sizeof(NewOrderBody);
-    static constexpr size_t EXEC_REPORT_MESSAGE_SIZE = sizeof(FrameHeader) + sizeof(ExecReportBody);
+    static constexpr size_t NEW_ORDER_MESSAGE_SIZE = sizeof(network::FrameHeader) + sizeof(network::NewOrderBody);
+    static constexpr size_t EXEC_REPORT_MESSAGE_SIZE = sizeof(network::FrameHeader) + sizeof(network::ExecReportBody);
 public:
 
-    NewOrderBody getNewOrderMessage(void* buffer);
-    ExecReportBody getExecReportMessage(void* buffer);
+    network::NewOrderBody getNewOrderMessage(void* buffer);
+    network::ExecReportBody getExecReportMessage(void* buffer);
     size_t getBodySize(void* buffer);
-    OEMessageType getMessageType(void* buffer);
+    network::OEMessageType getMessageType(void* buffer);
     bool isCompleteHeader(size_t size);
 
     static constexpr size_t MAX_FRAME_SIZE = std::max({NEW_ORDER_MESSAGE_SIZE, EXEC_REPORT_MESSAGE_SIZE});

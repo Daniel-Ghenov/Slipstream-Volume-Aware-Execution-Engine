@@ -1,6 +1,8 @@
 #include "OESerialiser.h"
 #include "OETypes.h"
 
+using namespace network;
+
 size_t OESerialiser::serialiseNewOrderMessage(void* buffer, NewOrderBody& body) {
     FrameHeader header = {sizeof(NewOrderBody), oeMessageTypeToNum(OEMessageType::NEW_ORDER), PROTOCOL_VERSION};
     memcpy(buffer, &header, sizeof(FrameHeader));

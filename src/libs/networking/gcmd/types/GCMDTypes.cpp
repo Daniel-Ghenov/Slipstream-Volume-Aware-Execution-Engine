@@ -2,6 +2,8 @@
 #include <cstring>
 #include <stdexcept>
 
+using namespace network;
+
 MessageType messageTypeFromNum(uint8_t type) {
     switch(type) {
         case 1: return MessageType::QUOTE;
@@ -43,8 +45,8 @@ char aggressorToChar(TradeAggressor aggressor) {
 SessionControlState sessionControlStateFromNum(uint8_t state) {
     switch(state) {
         case 0: return SessionControlState::OPEN;
-        case 1: return SessionControlState::CLOSE;
-        case 2: return SessionControlState::HALT;
+        case 1: return SessionControlState::HALT;
+        case 2: return SessionControlState::CLOSE;
         default: throw std::logic_error("Incorrect session control recieved");
     }
 }
@@ -58,8 +60,8 @@ uint8_t sessionControlStateToNum(SessionControlState aggressor) {
     }
 }
 
-network::Quote toQuote(const QuoteBody& body) {
-    network::Quote quote{};
+Quote toQuote(const QuoteBody& body) {
+    Quote quote{};
     std::memcpy(quote.symbol, body.symbol, sizeof(quote.symbol));
     quote.timestampNs = body.timestampNs;
     quote.bidQuantity = body.bidQuantity;
@@ -69,8 +71,8 @@ network::Quote toQuote(const QuoteBody& body) {
     return quote;
 }
 
-network::Trade toTrade(const TradeBody& body) {
-    network::Trade trade{};
+Trade toTrade(const TradeBody& body) {
+    Trade trade{};
     std::memcpy(trade.symbol, body.symbol, sizeof(trade.symbol));
     trade.timestampNs = body.timestampNs;
     trade.quantity = body.quantity;
@@ -80,10 +82,10 @@ network::Trade toTrade(const TradeBody& body) {
     return trade;
 }
 
-network::Heartbeat toHeartbeat(const HeartbeatBody& body) {
-    return network::Heartbeat{body.timestamp};
+Heartbeat toHeartbeat(const HeartbeatBody& body) {
+    return Heartbeat{body.timestamp};
 }
 
-network::SessionControl toSessionControl(const SessionControlBody& body) {
-    return network::SessionControl{body.timestamp, sessionControlStateFromNum(body.state)};
+SessionControl toSessionControl(const SessionControlBody& body) {
+    return SessionControl{body.timestamp, sessionControlStateFromNum(body.state)};
 }

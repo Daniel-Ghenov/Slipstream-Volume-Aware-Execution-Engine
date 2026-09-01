@@ -18,12 +18,13 @@ public:
     void run();
 
 private:
-    void sendTrade(const Trade& trade);
+    void sendTrade(const csv::Trade& trade);
     void sendHeartBeat();
     static size_t getNow();
+    static size_t getWallClockNow();
 
-    static TradeBody bodyFromTrade(const Trade& trade);
-    static const size_t HEARTBEAT_PER_MS = 50;
+    static Trade bodyFromTrade(const csv::Trade& trade);
+    static constexpr size_t HEARTBEAT_PER_MS = 50;
 };
 
 

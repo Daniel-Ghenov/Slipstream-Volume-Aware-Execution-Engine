@@ -1,5 +1,6 @@
 #include "OEDeserialiser.h"
 
+using namespace network;
 
 NewOrderBody OEDeserialiser::getNewOrderMessage(void* buffer) {
     NewOrderBody* body = reinterpret_cast<NewOrderBody*>(static_cast<std::byte*>(buffer) + sizeof(FrameHeader));

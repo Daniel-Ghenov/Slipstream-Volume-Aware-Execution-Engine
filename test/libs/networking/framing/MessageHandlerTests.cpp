@@ -11,7 +11,7 @@ namespace {
 
 std::vector<std::byte> encodeHeartbeat(uint64_t timestamp) {
     std::vector<std::byte> buf(GCMDSerialiser::MAX_FRAME_SIZE);
-    HeartbeatBody body{timestamp};
+    Heartbeat body{timestamp};
     const size_t n = GCMDSerialiser::serialiseHeartBeatMessage(buf.data(), body);
     buf.resize(n);
     return buf;
@@ -34,7 +34,7 @@ TEST_F(MessageHandlerTest, SingleMessageWholeInOneCall) {
     const MessagesRecieved result = handler.recieve(const_cast<std::byte*>(bytes.data()), bytes.size());
 
     ASSERT_EQ(result.messagesCount, 1u);
-    EXPECT_EQ(messageTypeFromNum(result.start->msgType), MessageType::HEARTBEAT);
+    EXPECT_EQ(messageTypeFromNum(static_cast<network::FrameHeader*>(result.start)->msgType), network::MessageType::HEARTBEAT);
     EXPECT_EQ(deserialiser.getHeartBeatMessage(result.start).timestamp, 12345u);
 }
 
@@ -88,8 +88,8 @@ TEST_F(MessageHandlerTest, TwoMessagesInOneCall) {
     ASSERT_EQ(result.messagesCount, 2u);
     EXPECT_EQ(deserialiser.getHeartBeatMessage(result.start).timestamp, 1u);
 
-    auto* secondHeader = reinterpret_cast<FrameHeader*>(
-        reinterpret_cast<std::byte*>(result.start) + sizeof(FrameHeader) + result.start->bodyLen);
+    auto* secondHeader = reinterpret_cast<network::FrameHeader*>(
+        reinterpret_cast<std::byte*>(result.start) + sizeof(network::FrameHeader) + static_cast<network::FrameHeader*>(result.start)->bodyLen);
     EXPECT_EQ(deserialiser.getHeartBeatMessage(secondHeader).timestamp, 2u);
 }
 
