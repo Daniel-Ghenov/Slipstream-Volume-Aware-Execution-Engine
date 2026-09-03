@@ -11,4 +11,6 @@ void QuoteMessageHandler::onMessage(const MDMessage& message) {
         throw std::logic_error("Cannot handle non-quote message");
 
     orderBookService->setQuote(*quote);
+    executionEngine->onQuoteReceived();
 }
+

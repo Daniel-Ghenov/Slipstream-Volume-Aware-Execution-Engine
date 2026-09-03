@@ -3,11 +3,15 @@ add_executable(slipstream
     network/NetworkMessageReceiver.cpp
     market/OrderBookService.cpp
     market/QuoteMessageHandler.cpp
+    orders/TradeMessageHandler.cpp
+    orders/VWAPService.cpp
 )
 
 target_include_directories(slipstream PRIVATE
     network
     market
+    orders
+    engine
 )
 
 target_link_libraries(slipstream PRIVATE

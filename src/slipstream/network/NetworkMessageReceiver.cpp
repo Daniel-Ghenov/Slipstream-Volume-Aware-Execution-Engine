@@ -7,11 +7,10 @@
 
 NetworkMessageReceiver::NetworkMessageReceiver(ClientConnection* con, MessageHandler* mh, NetworkMessageHandler* nmh,
                                                 std::chrono::milliseconds receiveTimeout, uint64_t heartbeatTimeoutMs):
-                                                                                                                        clientConnection(con),
-                                                                                                                        messageHandler(mh),
-                                                                                                                        networkMessageHandler(nmh),
-                                                                                                                        heartbeatTimeoutMs(heartbeatTimeoutMs) {
-    networkBuffer = ::operator new(MessageHandler::BUFFER_SIZE);
+                                                clientConnection(con),
+                                                messageHandler(mh),
+                                                networkMessageHandler(nmh),
+                                                heartbeatTimeoutMs(heartbeatTimeoutMs) {
     clientConnection->setReceiveTimeout(receiveTimeout);
     lastHeartbeat = getNow();
 }
@@ -40,7 +39,6 @@ void NetworkMessageReceiver::tryReceive() {
 NetworkMessageReceiver::~NetworkMessageReceiver() {
     shutdown();
     runningThread.join();
-    ::operator delete(networkBuffer);
 }
 
 void NetworkMessageReceiver::start() {

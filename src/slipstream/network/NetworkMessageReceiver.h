@@ -7,6 +7,7 @@
 #include "MessageHandler.h"
 #include <atomic>
 #include <chrono>
+#include <cstddef>
 #include <cstdint>
 #include <thread>
 
@@ -16,7 +17,7 @@ private:
     MessageHandler* messageHandler;
     NetworkMessageHandler* networkMessageHandler;
 
-    void* networkBuffer;
+    std::byte networkBuffer[MessageHandler::BUFFER_SIZE];
     std::thread runningThread;
     std::atomic<bool> shouldStop = false;
     uint64_t lastHeartbeat = 0;

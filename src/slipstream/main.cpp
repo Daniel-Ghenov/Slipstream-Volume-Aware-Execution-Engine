@@ -1,18 +1,24 @@
-
 #include "NetworkMessageReceiver.h"
 #include "OrderBookService.h"
 #include "QuoteMessageHandler.h"
+#include "TradeMessageHandler.h"
 #include "ServerConnection.h"
+#include "VWAPService.hpp"
 #include <CLI/CLI.hpp>
 #include <string>
 
 int main(int argc, char** argv) {
     CLI::App app{};
     std::string symbol;
-    app.add_option("--symbol", symbol, "The symbol to process")
-        ->required();
+    app.add_option("--symbol", symbol, "The symbol to process (ISIN, exactly 12 characters)")
+        ->required()
+        ->check([](const std::string& s) -> std::string {
+            if (s.size() != 12)
+                return "must be exactly 12 characters (ISIN)";
+            return {};
+        });
 
-    long long maxQantity;
+    uint64_t maxQantity;
     app.add_option("--max-quantity", maxQantity, "The maximum quantity for any trade")
         ->required();
 
@@ -21,7 +27,7 @@ int main(int argc, char** argv) {
         ->required();
 
 
-    long long vwapWindowMs;
+    uint64_t vwapWindowMs;
     app.add_option("--vwap-window-ms", vwapWindowMs, "Length of the trailing rolling window used for the VWAP benchmark")
         ->required();
 
@@ -60,9 +66,16 @@ int main(int argc, char** argv) {
 
     OrderBookService obService = {symbol};
     QuoteMessageHandler mdHandler = {&obService};
-    MessageHandler messageHandler;
-    NetworkMessageReceiver mdReceiver = {&mdClient, &messageHandler, &mdHandler};
+    MessageHandler mdMessageHandler;
+    NetworkMessageReceiver mdReceiver = {&mdClient, &mdMessageHandler, &mdHandler};
     mdReceiver.start();
+
+    VWAPServiceImpl<1024, OverflowPolicy::OVERWRITE_OLDEST> vwapService = {vwapWindowMs};
+    TradeMessageHandler oeHandler = {&vwapService};
+    MessageHandler oeMessageHandler;
+    NetworkMessageReceiver oeReceiver = {&oeClient, &oeMessageHandler, &oeHandler};
+    oeReceiver.start();
+
 
     
 

@@ -162,7 +162,7 @@ size_t CSVParser::parseUInt(std::string_view field) {
 }
 
 void CSVParser::copySymbol(char (&dest)[SYMBOL_MAX_LEN], std::string_view field) {
-    const size_t len = std::min(field.size(), SYMBOL_MAX_LEN - 1);
-    std::memcpy(dest, field.data(), len);
-    dest[len] = '\0';
+    if (field.size() != SYMBOL_MAX_LEN)
+        throw std::runtime_error("Symbol field must be exactly " + std::to_string(SYMBOL_MAX_LEN) + " characters (ISIN), got: " + std::string(field));
+    std::memcpy(dest, field.data(), SYMBOL_MAX_LEN);
 }

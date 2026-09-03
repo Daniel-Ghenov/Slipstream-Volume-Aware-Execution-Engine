@@ -4,10 +4,12 @@
 
 #include "OrderBookService.h"
 #include "NetworkMessageHandler.h"
+#include "ExecutionEngine.h"
 
 class QuoteMessageHandler : public NetworkMessageHandler {
 private:
     OrderBookService* orderBookService;
+    ExecutionEngine* executionEngine;
 
 public:
     QuoteMessageHandler(OrderBookService* orderBookService);

@@ -1,12 +1,12 @@
 #include "OrderBookService.h"
-#include <algorithm>
 #include <cstring>
+#include <stdexcept>
 
 
 OrderBookService::OrderBookService(const std::string& symbol) {
-    size_t len = std::min(symbol.size(), sizeof(this->symbol) - 1);
-    memcpy(this->symbol, symbol.data(), len);
-    this->symbol[len] = '\0';
+    if (symbol.size() != sizeof(this->symbol))
+        throw std::invalid_argument("Symbol must be exactly " + std::to_string(sizeof(this->symbol)) + " characters (ISIN)");
+    memcpy(this->symbol, symbol.data(), sizeof(this->symbol));
 }
 
 Quote OrderBookService::getQuote() {
@@ -18,7 +18,7 @@ Quote OrderBookService::getQuote() {
 }
 
 void OrderBookService::setQuote(Quote quote) {
-    if (strcmp(quote.symbol, symbol) != 0)
+    if (memcmp(quote.symbol, symbol, sizeof(symbol)) != 0)
         return;
     m.lock();
     latestQuote = quote;
