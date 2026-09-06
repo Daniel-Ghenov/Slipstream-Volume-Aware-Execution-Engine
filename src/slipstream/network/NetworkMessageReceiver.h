@@ -3,8 +3,9 @@
 
 
 #include "ClientConnection.h"
-#include "NetworkMessageHandler.h"
-#include "MessageHandler.h"
+#include "MessageReconstructor.h"
+#include "MasterMessageHandler.h"
+#include "ShutdownSignal.h"
 #include <atomic>
 #include <chrono>
 #include <cstddef>
@@ -14,19 +15,20 @@
 class NetworkMessageReceiver {
 private:
     ClientConnection* clientConnection;
-    MessageHandler* messageHandler;
-    NetworkMessageHandler* networkMessageHandler;
+    MasterMessageHandler* messageHandler;
+    MessageReconstructor* messageReconstructor;
+    ShutdownSignal* shutdownSignal;
 
-    std::byte networkBuffer[MessageHandler::BUFFER_SIZE];
+    std::byte networkBuffer[MessageReconstructor::BUFFER_SIZE];
     std::thread runningThread;
     std::atomic<bool> shouldStop = false;
     uint64_t lastHeartbeat = 0;
     uint64_t heartbeatTimeoutMs;
 
 public:
-    NetworkMessageReceiver(ClientConnection*, MessageHandler*, NetworkMessageHandler*,
+    NetworkMessageReceiver(ClientConnection*, MasterMessageHandler*, MessageReconstructor*, ShutdownSignal*,
                             std::chrono::milliseconds receiveTimeout = std::chrono::milliseconds(50),
-                            uint64_t heartbeatTimeoutMs = 100);
+                            uint64_t heartbeatTimeoutMs = 5000);
 
     NetworkMessageReceiver(const NetworkMessageReceiver&) = delete;
     NetworkMessageReceiver(NetworkMessageReceiver&&) = delete;

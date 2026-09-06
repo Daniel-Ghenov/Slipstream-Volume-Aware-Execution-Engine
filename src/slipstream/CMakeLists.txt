@@ -1,10 +1,14 @@
 add_executable(slipstream
     main.cpp
+    SessionControlHandler.cpp
     network/NetworkMessageReceiver.cpp
+    network/OrderMessageSender.cpp
+    network/MasterMessageHandler.cpp
     market/OrderBookService.cpp
     market/QuoteMessageHandler.cpp
     orders/TradeMessageHandler.cpp
     orders/VWAPService.cpp
+    engine/ExecutionEngine.cpp
 )
 
 target_include_directories(slipstream PRIVATE
@@ -20,4 +24,5 @@ target_link_libraries(slipstream PRIVATE
     libslipstream_codec
     gcmd_lib
     CLI11::CLI11
+    oe_lib
 )

@@ -3,20 +3,22 @@
 
 
 #include "OrderBookService.h"
-#include "NetworkMessageHandler.h"
+#include "MessageHandler.h"
 #include "ExecutionEngine.h"
 
-class QuoteMessageHandler : public NetworkMessageHandler {
+class QuoteMessageHandler : public MessageHandler {
 private:
     OrderBookService* orderBookService;
     ExecutionEngine* executionEngine;
 
 public:
-    QuoteMessageHandler(OrderBookService* orderBookService);
+    QuoteMessageHandler(OrderBookService* orderBookService, ExecutionEngine* executionEngine)
+        : orderBookService(orderBookService), executionEngine(executionEngine) {}
 
     QuoteMessageHandler(const QuoteMessageHandler&) = delete;
 
     virtual void onMessage(const MDMessage&) override;
+    virtual bool canHandleMessage(const MDMessage&) override;
 };
 
 

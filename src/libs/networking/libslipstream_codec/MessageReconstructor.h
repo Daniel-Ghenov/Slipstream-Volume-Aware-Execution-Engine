@@ -1,5 +1,5 @@
-#ifndef MESSAGE_HANDLER_H
-#define MESSAGE_HANDLER_H
+#ifndef MESSAGE_RECONSTRUCTOR_H
+#define MESSAGE_RECONSTRUCTOR_H
 
 #include <cstddef>
 
@@ -9,7 +9,7 @@ struct MessagesRecieved {
 };
 
 
-class MessageHandler {
+class MessageReconstructor {
 public:
     static constexpr size_t BUFFER_SIZE = 2048;
 
@@ -25,4 +25,4 @@ private:
     MessagesRecieved getMessages(void* buffer, size_t size);
 };
 
-#endif //MESSAGE_HANDLER_H
+#endif //MESSAGE_RECONSTRUCTOR_H

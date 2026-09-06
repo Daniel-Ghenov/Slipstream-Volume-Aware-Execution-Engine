@@ -1,4 +1,4 @@
-#include "MessageHandler.h"
+#include "MessageReconstructor.h"
 #include <algorithm>
 #include <cstring>
 #include <new>
@@ -6,7 +6,7 @@
 
 using network::FrameHeader;
 
-MessagesRecieved MessageHandler::recieve(void* mem, size_t size) {
+MessagesRecieved MessageReconstructor::recieve(void* mem, size_t size) {
 
     if (this->size + size > BUFFER_SIZE)
         throw std::bad_alloc();
@@ -22,7 +22,7 @@ MessagesRecieved MessageHandler::recieve(void* mem, size_t size) {
     return getMessages(buffer, this->size);
 }
 
-MessagesRecieved MessageHandler::getMessages(void* buffer, size_t size) {
+MessagesRecieved MessageReconstructor::getMessages(void* buffer, size_t size) {
 
     if (size < sizeof(FrameHeader))
         return {nullptr, 0};

@@ -1,5 +1,5 @@
 add_library(libslipstream_codec STATIC
-    MessageHandler.cpp
+    MessageReconstructor.cpp
 )
 
 target_include_directories(libslipstream_codec

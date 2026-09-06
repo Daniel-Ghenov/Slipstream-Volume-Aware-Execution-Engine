@@ -94,17 +94,27 @@ uint8_t rejectReasonToNum(RejectReason code) {
     }
 }
 
+NewOrder::NewOrder(uint64_t clientOrderId, const char (&symbol)[12], OrderStatus status, uint64_t tsNs, int64_t tradeId, OrderSide side, uint32_t qty, int64_t limitPx)
+    : clientOrderId(clientOrderId), status(status), tsNs(tsNs), tradeId(tradeId), side(side), qty(qty), limitPx(limitPx) {
+    std::memcpy(this->symbol, symbol, sizeof(this->symbol));
+}
+
 NewOrder toNewOrder(const NewOrderBody& body) {
-    NewOrder order{};
-    order.clientOrderId = body.clientOrderId;
-    std::memcpy(order.symbol, body.symbol, sizeof(order.symbol));
-    order.status = orderStatusFromChar(body.status);
-    order.tsNs = body.tsNs;
-    order.tradeId = body.tradeId;
-    order.side = orderSideFromChar(body.side);
-    order.qty = body.qty;
-    order.limitPx = body.limitPx;
-    return order;
+    return NewOrder(body.clientOrderId, body.symbol, orderStatusFromChar(body.status), body.tsNs, body.tradeId, orderSideFromChar(body.side), body.qty, body.limitPx);
+}
+
+network::NewOrderBody NewOrder::toBody() const {
+    
+    network::NewOrderBody body{};
+    body.clientOrderId = clientOrderId;
+    std::memcpy(body.symbol, symbol, sizeof(symbol));
+    body.status = orderStatusToChar(status);
+    body.tsNs = tsNs;
+    body.tradeId = tradeId;
+    body.side = orderSideToChar(side);
+    body.qty = qty;
+    body.limitPx = limitPx;
+    return body;
 }
 
 ExecReport toExecReport(const ExecReportBody& body) {
@@ -116,4 +126,15 @@ ExecReport toExecReport(const ExecReportBody& body) {
     report.avgPx = body.avgPx;
     report.reasonCode = rejectReasonFromNum(body.reasonCode);
     return report;
+}
+
+network::ExecReportBody ExecReport::toBody() const {
+    network::ExecReportBody body{};
+    body.clientOrderId = clientOrderId;
+    body.tsNs = tsNs;
+    body.status = execStatusToNum(status);
+    body.filledQty = filledQty;
+    body.avgPx = avgPx;
+    body.reasonCode = rejectReasonToNum(reasonCode);
+    return body;
 }

@@ -1,6 +1,10 @@
+#include "MasterMessageHandler.h"
 #include "NetworkMessageReceiver.h"
 #include "OrderBookService.h"
+#include "OrderMessageSender.h"
 #include "QuoteMessageHandler.h"
+#include "SessionControlHandler.h"
+#include "ShutdownSignal.h"
 #include "TradeMessageHandler.h"
 #include "ServerConnection.h"
 #include "VWAPService.hpp"
@@ -64,21 +68,32 @@ int main(int argc, char** argv) {
     ClientConnection mdClient = mdListener.accept();
     ClientConnection oeClient = oeListener.accept();
 
+    ShutdownSignal shutdownSignal;
+
+    VWAPService vwapService = {vwapWindowMs};
     OrderBookService obService = {symbol};
-    QuoteMessageHandler mdHandler = {&obService};
-    MessageHandler mdMessageHandler;
-    NetworkMessageReceiver mdReceiver = {&mdClient, &mdMessageHandler, &mdHandler};
+    ExecutionEngine executionEngine = {maxQantity, static_cast<uint64_t>(participationCap * 10000), vwapWindowMs, static_cast<uint64_t>(bandBps * 100), &obService, &vwapService};
+
+    QuoteMessageHandler mdHandler = {&obService, &executionEngine};
+    TradeMessageHandler oeHandler = {&vwapService, &executionEngine};
+    MasterMessageHandler masterHandler = {&mdHandler, &oeHandler};
+
+    MessageReconstructor mdMessageHandler;
+    NetworkMessageReceiver mdReceiver = {&mdClient, &masterHandler, &mdMessageHandler, &shutdownSignal};
     mdReceiver.start();
 
-    VWAPServiceImpl<1024, OverflowPolicy::OVERWRITE_OLDEST> vwapService = {vwapWindowMs};
-    TradeMessageHandler oeHandler = {&vwapService};
-    MessageHandler oeMessageHandler;
-    NetworkMessageReceiver oeReceiver = {&oeClient, &oeMessageHandler, &oeHandler};
+    OrderMessageSender orderSender = {&oeClient};
+    MessageReconstructor oeMessageHandler;
+    NetworkMessageReceiver oeReceiver = {&oeClient, &masterHandler, &oeMessageHandler, &shutdownSignal};
     oeReceiver.start();
 
+    SessionControlHandler sessionControlHandler = {&executionEngine, &oeReceiver, &mdReceiver, &shutdownSignal};
+    sessionControlHandler.startSession();
 
-    
+    shutdownSignal.wait();
 
+    mdReceiver.shutdown();
+    oeReceiver.shutdown();
 
 
     return 0;

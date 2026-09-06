@@ -3,14 +3,15 @@
 
 #include "GCMDTypes.h"
 
-class NetworkMessageHandler {
+
+
+class MessageHandler {
 public:
 
-    virtual ~NetworkMessageHandler() = default;
+    virtual ~MessageHandler() = default;
     virtual void onMessage(const MDMessage& message) = 0;
-
+    virtual bool canHandleMessage(const MDMessage& message) = 0;
 };
-
 
 
 

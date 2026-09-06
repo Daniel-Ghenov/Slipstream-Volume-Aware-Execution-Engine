@@ -2,8 +2,6 @@
 #include "GCMDTypes.h"
 #include <stdexcept>
 
-QuoteMessageHandler::QuoteMessageHandler(OrderBookService* obService): orderBookService(obService) {}
-
 void QuoteMessageHandler::onMessage(const MDMessage& message) {
 
     const Quote* quote = std::get_if<Quote>(&message);
@@ -12,5 +10,9 @@ void QuoteMessageHandler::onMessage(const MDMessage& message) {
 
     orderBookService->setQuote(*quote);
     executionEngine->onQuoteReceived();
+}
+
+bool QuoteMessageHandler::canHandleMessage(const MDMessage& message) {
+    return std::holds_alternative<Quote>(message);
 }
 

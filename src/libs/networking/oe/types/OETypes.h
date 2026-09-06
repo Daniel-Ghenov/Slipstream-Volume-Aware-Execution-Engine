@@ -3,7 +3,6 @@
 
 
 #include <cstdint>
-#include "FrameHeader.h"
 
 // Wire-format types: these are the packed structs actually written to and
 // read from the socket.
@@ -83,12 +82,6 @@ uint8_t execStatusToNum(ExecStatus status);
 RejectReason rejectReasonFromNum(uint8_t code);
 uint8_t rejectReasonToNum(RejectReason code);
 
-
-// ---- Non-packed domain objects for business logic. Translate a wire body
-// (network::NewOrderBody etc.) into one of these immediately after
-// receiving it, and use these (never the network:: structs) past that
-// point: naturally aligned, and with wire codes already decoded.
-
 struct NewOrder {
     uint64_t clientOrderId;
     char symbol[12];
@@ -98,6 +91,11 @@ struct NewOrder {
     OrderSide side;
     uint32_t qty;
     int64_t limitPx;
+
+    NewOrder() = default;
+    NewOrder(uint64_t clientOrderId, const char (&symbol)[12], OrderStatus status, uint64_t tsNs, int64_t tradeId, OrderSide side, uint32_t qty, int64_t limitPx);
+
+    network::NewOrderBody toBody() const;
 };
 
 struct ExecReport {
@@ -107,6 +105,8 @@ struct ExecReport {
     uint32_t filledQty;
     int64_t avgPx;
     RejectReason reasonCode;
+
+    network::ExecReportBody toBody() const;
 };
 
 NewOrder toNewOrder(const network::NewOrderBody& body);

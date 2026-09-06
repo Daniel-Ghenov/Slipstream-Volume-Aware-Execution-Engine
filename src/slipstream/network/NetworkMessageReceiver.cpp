@@ -5,11 +5,12 @@
 #include <iostream>
 
 
-NetworkMessageReceiver::NetworkMessageReceiver(ClientConnection* con, MessageHandler* mh, NetworkMessageHandler* nmh,
+NetworkMessageReceiver::NetworkMessageReceiver(ClientConnection* con, MasterMessageHandler* mh, MessageReconstructor* mr, ShutdownSignal* shutdownSignal,
                                                 std::chrono::milliseconds receiveTimeout, uint64_t heartbeatTimeoutMs):
                                                 clientConnection(con),
                                                 messageHandler(mh),
-                                                networkMessageHandler(nmh),
+                                                messageReconstructor(mr),
+                                                shutdownSignal(shutdownSignal),
                                                 heartbeatTimeoutMs(heartbeatTimeoutMs) {
     clientConnection->setReceiveTimeout(receiveTimeout);
     lastHeartbeat = getNow();
@@ -17,12 +18,12 @@ NetworkMessageReceiver::NetworkMessageReceiver(ClientConnection* con, MessageHan
 
 void NetworkMessageReceiver::tryReceive() {
 
-    size_t bytesRecv = clientConnection->receiveBuffer(networkBuffer, MessageHandler::BUFFER_SIZE);
+    size_t bytesRecv = clientConnection->receiveBuffer(networkBuffer, MessageReconstructor::BUFFER_SIZE);
 
     if (bytesRecv == 0)
         return;
 
-    auto [ptr, count] = messageHandler->recieve(networkBuffer, bytesRecv);
+    auto [ptr, count] = messageReconstructor->recieve(networkBuffer, bytesRecv);
 
     for(size_t i{0uz}; i < count; ++i) {
         MDMessage message = GCMDDeserialiser::deserialiseMessage(ptr);
@@ -31,7 +32,7 @@ void NetworkMessageReceiver::tryReceive() {
             lastHeartbeat = hb->timestamp;
         }
 
-        networkMessageHandler->onMessage(message);
+        messageHandler->onMessage(message);
         ptr = static_cast<std::byte*>(ptr) + GCMDDeserialiser::getMessageSize(ptr);
     }
 }
@@ -53,6 +54,11 @@ void NetworkMessageReceiver::shutdown() {
 }
 
 void NetworkMessageReceiver::run() {
+    struct TriggerOnExit {
+        ShutdownSignal* signal;
+        ~TriggerOnExit() { signal->trigger(); }
+    } triggerOnExit{shutdownSignal};
+
     while(!shouldStop.load(std::memory_order_acquire)) {
         try {
             tryReceive();
