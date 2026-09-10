@@ -17,8 +17,9 @@ void MessageDeMultiplexer::run() {
         while (messageQueue->empty()) {
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }   
-        MDMessage message = messageQueue->pop();
-        masterHandler->onMessage(message);
+        std::optional<MDMessage> message = messageQueue->pop();
+        if (message.has_value())
+            masterHandler->onMessage(message.value());
     }
 }
 

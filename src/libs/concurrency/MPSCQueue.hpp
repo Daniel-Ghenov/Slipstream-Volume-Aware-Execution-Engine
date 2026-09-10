@@ -1,66 +1,76 @@
 #ifndef MPSC_QUEUE_HPP
 #define MPSC_QUEUE_HPP
 
+#include <array>
 #include <atomic>
+#include <cstddef>
 #include <mutex>
-#include <stdexcept>
+#include <optional>
+#include <utility>
 
 
-template <typename T>
+template <typename T, std::size_t Capacity>
 class MPSCQueue {
+    static_assert(Capacity > 0, "Capacity must be greater than zero");
+
 private:
-    struct Node {
-        Node* next = nullptr;
-        T data;
-    };
-    std::mutex headM;
-    Node* head;
-    Node* tail;
+    static constexpr std::size_t SlotCount = Capacity + 1;
+
+    std::array<T, SlotCount> buffer{};
+    std::atomic<std::size_t> head{0};
+    std::atomic<std::size_t> tail{0};
+    std::mutex producerLock;
+
+    static std::size_t next(std::size_t index) {
+        return (index + 1) % SlotCount;
+    }
 
 public:
-    MPSCQueue() {
-        Node* stub = new Node();
-        head = tail = stub;
-    }
+    MPSCQueue() = default;
 
     MPSCQueue(const MPSCQueue& other) = delete;
     MPSCQueue& operator=(const MPSCQueue& other) = delete;
     MPSCQueue(MPSCQueue&& other) = delete;
     MPSCQueue& operator=(MPSCQueue&& other) = delete;
 
-    ~MPSCQueue() {
-        Node* node = tail;
-        while (node != nullptr) {
-            Node* next = node->next.load(std::memory_order_relaxed);
-            delete node;
-            node = next;
-        }
+
+    bool push(const T& value) {
+        return emplace(value);
     }
 
-    T pop() {
-        if (empty())
-            throw std::out_of_range("No elements inside of the queue");
-        
-        Node* next = head->next;
-        T temp = next->data;
-        delete head;
-        head = next;
-
-        return temp;
+    bool push(T&& value) {
+        return emplace(std::move(value));
     }
 
-    void push(const T& data) {
-        headM.lock();
-        Node* newNode = new Node(data, nullptr);
-        tail->next = newNode;
-        tail = newNode;
-        headM.unlock();
+    std::optional<T> pop() {
+        std::size_t currentTail = tail.load(std::memory_order_relaxed);
+        if (currentTail == head.load(std::memory_order_acquire))
+            return std::nullopt;
+
+        T value = std::move(buffer[currentTail]);
+        tail.store(next(currentTail), std::memory_order_release);
+        return value;
     }
+
 
     bool empty() const {
-        return head->next == nullptr;
+        return tail.load(std::memory_order_relaxed) == head.load(std::memory_order_acquire);
     }
-    
+
+private:
+    template <typename U>
+    bool emplace(U&& value) {
+        std::lock_guard lock(producerLock);
+
+        std::size_t currentHead = head.load(std::memory_order_relaxed);
+        std::size_t nextHead = next(currentHead);
+        if (nextHead == tail.load(std::memory_order_acquire))
+            return false;
+
+        buffer[currentHead] = std::forward<U>(value);
+        head.store(nextHead, std::memory_order_release);
+        return true;
+    }
 };
 
 #endif //MPSC_QUEUE_HPP

@@ -8,26 +8,30 @@ OrderMessageSender::~OrderMessageSender() {
 }
 
 void OrderMessageSender::send(NewOrder& order) {
-    messageQueue.push(order);
+    while (!messageQueue.push(order)) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
 }
 
 void OrderMessageSender::send(ExecReport& report) {
-    messageQueue.push(report);
-
+    while (!messageQueue.push(report)) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
 }
 
 void OrderMessageSender::run() {
     while (!shouldStop) {
-        while (messageQueue.empty()) {
+        auto message = messageQueue.pop();
+        if (!message.has_value()) {
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            continue;
         }
-        std::variant<NewOrder, ExecReport> message = messageQueue.pop();
 
-        if (std::holds_alternative<NewOrder>(message)) {
-            NewOrder& order = std::get<NewOrder>(message);
+        if (std::holds_alternative<NewOrder>(*message)) {
+            NewOrder& order = std::get<NewOrder>(*message);
             sendNewOrder(order);
-        } else if (std::holds_alternative<ExecReport>(message)) {
-            ExecReport& report = std::get<ExecReport>(message);
+        } else if (std::holds_alternative<ExecReport>(*message)) {
+            ExecReport& report = std::get<ExecReport>(*message);
             sendExecReport(report);
         }
 

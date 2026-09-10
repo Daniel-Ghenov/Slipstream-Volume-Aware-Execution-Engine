@@ -4,6 +4,7 @@ add_executable(slipstream
     network/NetworkMessageReceiver.cpp
     network/OrderMessageSender.cpp
     network/MasterMessageHandler.cpp
+    network/MessageDeMultiplexer.cpp
     market/OrderBookService.cpp
     market/QuoteMessageHandler.cpp
     orders/TradeMessageHandler.cpp

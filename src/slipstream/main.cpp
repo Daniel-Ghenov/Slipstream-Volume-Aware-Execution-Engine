@@ -1,3 +1,4 @@
+#include "InboundMessageQueue.h"
 #include "MasterMessageHandler.h"
 #include "MessageDeMultiplexer.h"
 #include "NetworkMessageReceiver.h"
@@ -75,16 +76,17 @@ int main(int argc, char** argv) {
     OrderBookService obService = {symbol};
     ExecutionEngine executionEngine = {maxQantity, static_cast<uint64_t>(participationCap * 10000), vwapWindowMs, static_cast<uint64_t>(bandBps * 100), &obService, &vwapService};
 
+    OrderMessageSender orderSender = {&oeClient};
+
     QuoteMessageHandler mdHandler = {&obService, &executionEngine};
-    TradeMessageHandler oeHandler = {&vwapService, &executionEngine};
+    TradeMessageHandler oeHandler = {&vwapService, &executionEngine, &orderSender};
     MasterMessageHandler masterHandler = {&mdHandler, &oeHandler};
-    MPSCQueue<MDMessage> inboundMessageQueue;
+    InboundMessageQueue inboundMessageQueue;
 
     MessageReconstructor mdMessageHandler;
     NetworkMessageReceiver mdReceiver = {&mdClient, &inboundMessageQueue, &mdMessageHandler, &shutdownSignal};
     mdReceiver.start();
 
-    OrderMessageSender orderSender = {&oeClient};
     MessageReconstructor oeMessageHandler;
     NetworkMessageReceiver oeReceiver = {&oeClient, &inboundMessageQueue, &oeMessageHandler, &shutdownSignal};
     oeReceiver.start();

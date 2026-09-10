@@ -4,7 +4,7 @@
 
 #include "ClientConnection.h"
 #include "GCMDTypes.h"
-#include "MPSCQueue.hpp"
+#include "InboundMessageQueue.h"
 #include "MessageReconstructor.h"
 #include "ShutdownSignal.h"
 #include <atomic>
@@ -16,7 +16,7 @@
 class NetworkMessageReceiver {
 private:
     ClientConnection* clientConnection;
-    MPSCQueue<MDMessage>* messageQueue;
+    InboundMessageQueue* messageQueue;
 
     MessageReconstructor* messageReconstructor;
     ShutdownSignal* shutdownSignal;
@@ -28,7 +28,7 @@ private:
     uint64_t heartbeatTimeoutMs;
 
 public:
-    NetworkMessageReceiver(ClientConnection*, MPSCQueue<MDMessage>*, MessageReconstructor*, ShutdownSignal*,
+    NetworkMessageReceiver(ClientConnection*, InboundMessageQueue*, MessageReconstructor*, ShutdownSignal*,
                             std::chrono::milliseconds receiveTimeout = std::chrono::milliseconds(50),
                             uint64_t heartbeatTimeoutMs = 5000);
 

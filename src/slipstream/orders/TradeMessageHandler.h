@@ -13,8 +13,8 @@ private:
     OrderMessageSender* orderMessageSender;
 
 public:
-    TradeMessageHandler(VWAPService* vwapService, ExecutionEngine* executionEngine)
-        : vwapService(vwapService), executionEngine(executionEngine) {}
+    TradeMessageHandler(VWAPService* vwapService, ExecutionEngine* executionEngine, OrderMessageSender* orderMessageSender)
+        : vwapService(vwapService), executionEngine(executionEngine), orderMessageSender(orderMessageSender) {}
 
     TradeMessageHandler(const TradeMessageHandler&) = delete;
 

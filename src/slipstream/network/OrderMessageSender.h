@@ -8,12 +8,12 @@
 #include <thread>
 #include <variant>
 
-
 class OrderMessageSender {
 private:
     ClientConnection* clientConnection;
     std::byte buffer[OESerialiser::MAX_FRAME_SIZE];
-    SPSCQueue<std::variant<NewOrder, ExecReport>> messageQueue;
+    static constexpr size_t QUEUE_SIZE = 1024;
+    SPSCQueue<std::variant<NewOrder, ExecReport>, QUEUE_SIZE> messageQueue;
 
     std::thread runningThread;
     std::atomic<bool> shouldStop = false;

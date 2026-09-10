@@ -1,83 +1,69 @@
 #ifndef SPSC_QUEUE_HPP
 #define SPSC_QUEUE_HPP
 
+#include <array>
+#include <atomic>
+#include <cstddef>
+#include <optional>
 #include <utility>
-#include <stdexcept>
 
-template <typename T>
+template <typename T, std::size_t Capacity>
 class SPSCQueue {
+    static_assert(Capacity > 0, "Capacity must be greater than zero");
+
 private:
-    struct Node {
-        T data;
-        Node* next = nullptr;
-    };
+    static constexpr std::size_t SlotCount = Capacity + 1;
 
-    Node* head = nullptr;
-    Node* tail = nullptr;
-    
-public:
+    std::array<T, SlotCount> buffer{};
+    std::atomic<std::size_t> head{0};
+    std::atomic<std::size_t> tail{0};
 
-    SPSCQueue() {
-        head = tail = new Node();
-        head->next = nullptr;
+    static std::size_t next(std::size_t index) {
+        return (index + 1) % SlotCount;
     }
+
+public:
+    SPSCQueue() = default;
 
     SPSCQueue(const SPSCQueue& other) = delete;
     SPSCQueue& operator=(const SPSCQueue& other) = delete;
+    SPSCQueue(SPSCQueue&& other) = delete;
+    SPSCQueue& operator=(SPSCQueue&& other) = delete;
 
-    SPSCQueue(SPSCQueue&& other) {
-        moveFrom(std::move(other));
+    bool push(const T& value) {
+        return emplace(value);
     }
 
-    SPSCQueue& operator=(SPSCQueue&& other) {
-        if (this != &other) {
-            free();
-            moveFrom(other);
-        }
-        return this;
+    bool push(T&& value) {
+        return emplace(std::move(value));
     }
 
-    ~SPSCQueue() {
-        free();
-    }
+    std::optional<T> pop() {
+        std::size_t currentTail = tail.load(std::memory_order_relaxed);
+        if (currentTail == head.load(std::memory_order_acquire))
+            return std::nullopt;
 
-    T pop() {
-        if (empty())
-            throw std::out_of_range("No elements inside of the queue");
-        
-        Node* next = head->next;
-        T temp = next->data;
-        delete head;
-        head = next;
-
-        return temp;
-    }
-
-    void push(const T& data) {
-        Node* newNode = new Node(data, nullptr);
-        tail->next = newNode;
-        tail = newNode;
+        T value = std::move(buffer[currentTail]);
+        tail.store(next(currentTail), std::memory_order_release);
+        return value;
     }
 
     bool empty() const {
-        return head->next == nullptr;
+        return tail.load(std::memory_order_relaxed) == head.load(std::memory_order_acquire);
     }
 
 private:
-    void free() {
-        while (head != nullptr) {
-            Node* temp = head->next;
-            delete head;
-            head = temp;
-        }
-    }
+    template <typename U>
+    bool emplace(U&& value) {
+        std::size_t currentHead = head.load(std::memory_order_relaxed);
+        std::size_t nextHead = next(currentHead);
+        if (nextHead == tail.load(std::memory_order_acquire))
+            return false;
 
-    void moveFrom(SPSCQueue&& other) {
-        head = other.head;
-        tail = other.tail;
-        other.head = other.tail = nullptr;
+        buffer[currentHead] = std::forward<U>(value);
+        head.store(nextHead, std::memory_order_release);
+        return true;
     }
-
 };
 
 #endif //SPSC_QUEUE_HPP
