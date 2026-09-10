@@ -10,9 +10,7 @@ OrderBookService::OrderBookService(const std::string& symbol) {
 }
 
 Quote OrderBookService::getQuote() {
-    m.lock();
     Quote quote = latestQuote;
-    m.unlock();
     return quote;
 
 }
@@ -20,15 +18,11 @@ Quote OrderBookService::getQuote() {
 void OrderBookService::setQuote(Quote quote) {
     if (memcmp(quote.symbol, symbol, sizeof(symbol)) != 0)
         return;
-    m.lock();
     latestQuote = quote;
     ++quotesReceived;
-    m.unlock();
 }
 
 size_t OrderBookService::getQuotesReceived() {
-    m.lock();
     size_t qr = quotesReceived;
-    m.unlock();
     return qr;
 }

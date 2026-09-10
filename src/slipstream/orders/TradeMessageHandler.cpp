@@ -9,8 +9,9 @@ void TradeMessageHandler::onMessage(const MDMessage& message) {
         throw std::logic_error("Cannot handle non-quote message");
 
     vwapService->handleTrade<OverflowPolicy::OVERWRITE_OLDEST>(*trade);
-    NewOrder newOrder = executionEngine->handleTrade(*trade);
-    orderMessageSender->send(newOrder);
+    std::optional<NewOrder> newOrder = executionEngine->handleTrade(*trade);
+    if (newOrder.has_value())
+        orderMessageSender->send(newOrder.value());
 
 }
 

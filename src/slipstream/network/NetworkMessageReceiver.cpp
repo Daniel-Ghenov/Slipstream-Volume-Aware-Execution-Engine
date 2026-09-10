@@ -5,10 +5,10 @@
 #include <iostream>
 
 
-NetworkMessageReceiver::NetworkMessageReceiver(ClientConnection* con, MasterMessageHandler* mh, MessageReconstructor* mr, ShutdownSignal* shutdownSignal,
+NetworkMessageReceiver::NetworkMessageReceiver(ClientConnection* con, MPSCQueue<MDMessage>* mq, MessageReconstructor* mr, ShutdownSignal* shutdownSignal,
                                                 std::chrono::milliseconds receiveTimeout, uint64_t heartbeatTimeoutMs):
                                                 clientConnection(con),
-                                                messageHandler(mh),
+                                                messageQueue(mq),
                                                 messageReconstructor(mr),
                                                 shutdownSignal(shutdownSignal),
                                                 heartbeatTimeoutMs(heartbeatTimeoutMs) {
@@ -31,8 +31,7 @@ void NetworkMessageReceiver::tryReceive() {
         if (hb && hb->timestamp > lastHeartbeat) {
             lastHeartbeat = hb->timestamp;
         }
-
-        messageHandler->onMessage(message);
+        messageQueue->push(message);
         ptr = static_cast<std::byte*>(ptr) + GCMDDeserialiser::getMessageSize(ptr);
     }
 }

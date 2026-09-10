@@ -1,4 +1,5 @@
 #include "MasterMessageHandler.h"
+#include "MessageDeMultiplexer.h"
 #include "NetworkMessageReceiver.h"
 #include "OrderBookService.h"
 #include "OrderMessageSender.h"
@@ -77,15 +78,19 @@ int main(int argc, char** argv) {
     QuoteMessageHandler mdHandler = {&obService, &executionEngine};
     TradeMessageHandler oeHandler = {&vwapService, &executionEngine};
     MasterMessageHandler masterHandler = {&mdHandler, &oeHandler};
+    MPSCQueue<MDMessage> inboundMessageQueue;
 
     MessageReconstructor mdMessageHandler;
-    NetworkMessageReceiver mdReceiver = {&mdClient, &masterHandler, &mdMessageHandler, &shutdownSignal};
+    NetworkMessageReceiver mdReceiver = {&mdClient, &inboundMessageQueue, &mdMessageHandler, &shutdownSignal};
     mdReceiver.start();
 
     OrderMessageSender orderSender = {&oeClient};
     MessageReconstructor oeMessageHandler;
-    NetworkMessageReceiver oeReceiver = {&oeClient, &masterHandler, &oeMessageHandler, &shutdownSignal};
+    NetworkMessageReceiver oeReceiver = {&oeClient, &inboundMessageQueue, &oeMessageHandler, &shutdownSignal};
     oeReceiver.start();
+
+    MessageDeMultiplexer messageDeMultiplexer =  {&masterHandler, &inboundMessageQueue};
+    messageDeMultiplexer.start();
 
     SessionControlHandler sessionControlHandler = {&executionEngine, &oeReceiver, &mdReceiver, &shutdownSignal};
     sessionControlHandler.startSession();

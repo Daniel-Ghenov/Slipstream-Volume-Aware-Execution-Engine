@@ -23,6 +23,7 @@ target_link_libraries(slipstream PRIVATE
     networking_lib
     libslipstream_codec
     gcmd_lib
+    concurrency_lib
     CLI11::CLI11
     oe_lib
 )
